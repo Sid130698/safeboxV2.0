@@ -14,9 +14,11 @@ import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.safebox002.utils.MyEncrypter;
@@ -36,7 +38,9 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -53,18 +57,20 @@ import javax.crypto.NoSuchPaddingException;
 
 public class HomeActivity extends AppCompatActivity {
     String FILE_NAME_ENC;
-    Button btn,logout,changeKeyButton;
+    String FILE_NAME_DEC;
+    Button btn,logout,changeKeyButton,showFilesKey;
+    ImageView decryptedImage;
     FirebaseAuth mauth;
-    Intent myFileIntent;
+    Intent myFileIntent,decryptFileIntent;
     DatabaseReference databaseReference;
     EditText newKeyEditText;
-    String filepath;
-    //    Bitmap bitmapofgalleryimage;
-    InputStream galleryimageinputstream;
+    String filepath,decryptFilePath;
+    InputStream galleryimageinputstream,decryptionInputStream;
     File myDir;
     String my_key;
     String default_key="P7q0kXUrBg7I6Ilg";
     String my_spec_key="f0pwGwwCuB3U73NA";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -120,6 +126,7 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
         });
+
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -129,12 +136,21 @@ public class HomeActivity extends AppCompatActivity {
             }
 
         });
+
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mauth.signOut();
                 startActivity(new Intent(HomeActivity.this,MainActivity.class));
                 finish();
+            }
+        });
+
+        showFilesKey.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                decryptFileIntent=new Intent(Intent.ACTION_GET_CONTENT);
+                mGetContext2.launch("*/*");
             }
         });
     }
@@ -185,24 +201,50 @@ public class HomeActivity extends AppCompatActivity {
             new ActivityResultCallback<Uri>() {
                 @Override
                 public void onActivityResult(Uri uri) {
-                    // Handle the returned Uri
                     filepath=uri.getPath();
                     galleryimageinputstream=uriToBitmap(uri);
                     encryptimage();
                 }
             });
 
+    ActivityResultLauncher<String> mGetContext2 = registerForActivityResult(new ActivityResultContracts.GetContent(),
+            new ActivityResultCallback<Uri>() {
+                @Override
+                public void onActivityResult(Uri uri) {
+                    decryptFilePath=uri.getPath();
+                    File outputFileDec=new File(myDir,FILE_NAME_DEC);
+                    File file=new File(uri.getPath());
+                    String newfile=file.getName();
+                    File encryptedFiletoDecrypt=new File(myDir,newfile);
+
+                    try {
+                        MyEncrypter.decryptToFile(my_key,my_spec_key,
+                                new FileInputStream(encryptedFiletoDecrypt),
+                                new FileOutputStream(outputFileDec));
+                        decryptedImage.setImageURI(Uri.fromFile(outputFileDec));
+                        outputFileDec.delete();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    } catch (InvalidKeyException e) {
+                        e.printStackTrace();
+                    } catch (InvalidAlgorithmParameterException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchPaddingException e) {
+                        e.printStackTrace();
+                    }
+
+
+                }
+            });
+
+
+
+
+
     private InputStream uriToBitmap(Uri uri) {
         try {
-//            ParcelFileDescriptor parcelFileDescriptor=
-//                    getContentResolver().openFileDescriptor(uri,"r");
-//            FileDescriptor fileDescriptor=parcelFileDescriptor.getFileDescriptor();
-//            Bitmap image= BitmapFactory.decodeFileDescriptor(fileDescriptor);
-//            ByteArrayOutputStream stream=new ByteArrayOutputStream();
-//            image.compress(Bitmap.CompressFormat.PNG,100,stream);
-//            InputStream inputStream=new ByteArrayInputStream(stream.toByteArray());
-//            parcelFileDescriptor.close();
-//            return inputStream;
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
             ByteArrayOutputStream stream=new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.PNG,100,stream);
@@ -223,10 +265,11 @@ public class HomeActivity extends AppCompatActivity {
         logout=findViewById(R.id.logout_btn);
         changeKeyButton=findViewById(R.id.chageKeyButton);
         mauth=FirebaseAuth.getInstance();
-//         getApplication<Application>().getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.path
         myDir=new File(Environment.getExternalStorageDirectory()+"/safebox_dir");
-//        myDir=new File(getApplication().getExternalFilesDirs(Environment.getExternalStorageState("/safebox_dir")));
         FILE_NAME_ENC=new SimpleDateFormat("yyyyMMddhhmmss'.txt'").format(new Date());
+        FILE_NAME_DEC=new SimpleDateFormat("yyyyMMddhhmmss'.png'").format(new Date());
         databaseReference= FirebaseDatabase.getInstance().getReference();
+        showFilesKey=findViewById(R.id.showMyFiles);
+        decryptedImage=findViewById(R.id.decryptedImage);
     }
 }
