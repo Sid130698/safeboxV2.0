@@ -4,8 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
+    android:background="#1e3d59"
     tools:context=".HomeActivity">
+    <ImageView
+        android:id="@+id/decryptedImage"
+        android:layout_width="350dp"
+        android:layout_height="450dp"
+        android:layout_below="@+id/chageKeyButton"
+        android:layout_centerInParent="true"
+        android:src="@drawable/image"
+        />
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -14,7 +22,10 @@
         android:layout_margin="10dp"
         android:layout_below="@id/keyEditText"
         android:id="@+id/chageKeyButton"
-        android:visibility="visible"/>
+        android:visibility="visible"
+        android:background="@drawable/submitbutton"
+        android:textColor="@color/almond"
+        />
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -25,14 +36,19 @@
         android:id="@+id/keyEditText"
        android:visibility="gone"
         android:layout_margin="5dp"
+        android:textColor="@color/red_orange"
         android:hint="Enter The encryption key"/>
     <Button
+        android:layout_below="@+id/decryptedImage"
         android:layout_centerInParent="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="upload files"
         android:enabled="false"
         android:id="@+id/upload_btn"
+        android:background="@drawable/submitbutton"
+        android:layout_margin="10dp"
+        android:textColor="@color/almond"
         />
     <Button
         android:layout_centerInParent="true"
@@ -41,7 +57,21 @@
         android:text="Logout"
         android:layout_below="@+id/upload_btn"
         android:id="@+id/logout_btn"
+        android:background="@drawable/submitbutton"
         android:layout_margin="10dp"
+        android:textColor="@color/almond"
+        />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Show my files"
+        android:id="@+id/showMyFiles"
+        android:layout_below="@+id/logout_btn"
+        android:layout_centerInParent="true"
+        android:background="@drawable/submitbutton"
+        android:layout_margin="10dp"
+        android:textColor="@color/almond"
         />
 
 </RelativeLayout>
